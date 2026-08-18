@@ -13,11 +13,13 @@ import {
   setQualifiedFlag,
   hasSuccessfulRun,
   getTenantOwnerEmail,
+  hasOpenTicket,
   type FieldDef,
   type ConversationContext,
 } from "@/lib/repo/ingest";
-import { getLLM } from "@/lib/llm/gemini";
+import { getLLM, HANDOFF_KEY } from "@/lib/llm/gemini";
 import { getChannelProvider } from "@/lib/channel/openwa";
+import { raiseHandoffTicket } from "@/lib/tickets/handoff";
 import { evaluateRule, type Condition, type Logic } from "@/lib/qualify/engine";
 import { runIntegration } from "@/lib/integrations/executor";
 import { notifyLeadQualified } from "@/lib/notify/notify";
@@ -62,6 +64,13 @@ async function runOneTurn(conversationId: string): Promise<void> {
   const ctx = await getConversationContext(conversationId);
   if (!ctx || ctx.history.length === 0) return;
 
+  // Human handoff: once a conversation has an active ticket, the agent is paused so a person can
+  // take over. Inbound messages are still persisted by the webhook; we just do not auto-reply.
+  if (await hasOpenTicket(conversationId)) {
+    console.log("[agent] paused, open ticket", { conversationId });
+    return;
+  }
+
   const llm = getLLM();
   const [fields, collected] = await Promise.all([
     getFieldDefs(ctx.agentId),
@@ -70,7 +79,8 @@ async function runOneTurn(conversationId: string): Promise<void> {
 
   // 1 + 2: extraction pass, then merge only newly stated, type-valid values. A failed extraction
   // (transient model error, quota) must not abort the turn: keep the prior collected_data and still
-  // reply, so the conversation never stalls.
+  // reply, so the conversation never stalls. The same call flags a human-handoff request.
+  let handoffRequested = false;
   if (fields.length > 0) {
     try {
       const extracted = await llm.extract({
@@ -83,10 +93,20 @@ async function runOneTurn(conversationId: string): Promise<void> {
         })),
         history: ctx.history,
       });
+      handoffRequested = extracted[HANDOFF_KEY] === true;
       mergeCollected(collected, extracted, fields);
     } catch (err) {
       console.warn("[agent] extraction failed, continuing", (err as Error)?.message);
     }
+  }
+
+  // If the customer asked for a person, open a ticket (holding message + owner notify happen
+  // inside), then stop this turn: no qualification, no normal reply. The pause check above handles
+  // every following message until the ticket is resolved.
+  if (handoffRequested) {
+    await raiseHandoffTicket(conversationId, "Customer asked to speak with a person.", "ai");
+    console.log("[agent] handoff ticket raised", { conversationId });
+    return;
   }
 
   // 3: find the next missing required field (ask order), or none when complete.

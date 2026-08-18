@@ -11,6 +11,47 @@ export interface LeadNotice {
   crmRecordId: string | null;
 }
 
+export interface TicketNotice {
+  tenantName: string;
+  ownerEmail: string | null;
+  contactName: string | null;
+  conversationId: string;
+  reason: string;
+}
+
+// Owner notification when a customer is handed off to a human. Same policy as lead notifications:
+// email via Resend when configured and an owner address is known, otherwise a concise log line.
+export async function notifyTicketCreated(notice: TicketNotice): Promise<void> {
+  const key = env.resendApiKey;
+  if (!key || !notice.ownerEmail) {
+    console.log("[notify] handoff ticket", {
+      conversationId: notice.conversationId,
+      reason: notice.reason,
+    });
+    return;
+  }
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: env.resendFrom || "leads@notifications.local",
+        to: notice.ownerEmail,
+        subject: `${notice.tenantName}: a customer asked to speak with your team`,
+        text:
+          `A customer has requested a person.\n\n` +
+          `Name: ${notice.contactName ?? "Unknown"}\n` +
+          `Reason: ${notice.reason}\n` +
+          `Conversation: ${notice.conversationId}\n`,
+      }),
+    });
+    if (!res.ok) console.warn("[notify] resend failed", { httpStatus: res.status });
+  } catch (err) {
+    console.warn("[notify] resend error", (err as Error)?.message);
+  }
+}
+
 export async function notifyLeadQualified(notice: LeadNotice): Promise<void> {
   const key = env.resendApiKey;
   // Log-only when Resend is not configured, or when we have no owner address to send to.

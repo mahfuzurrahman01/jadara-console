@@ -11,6 +11,7 @@ import { initials } from "@/lib/dashboard/format";
 const NAV = [
   { href: "/", label: "Conversations" },
   { href: "/leads", label: "Qualified leads" },
+  { href: "/tickets", label: "Tickets" },
   { href: "/connect", label: "WhatsApp" },
   { href: "/agent", label: "Agent setup" },
   { href: "/rules", label: "Qualification rules" },

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getConversationDetail } from "@/lib/dashboard/queries";
+import { hasOpenTicket } from "@/lib/repo/ingest";
+import { createTicketManual } from "@/lib/tickets/actions";
 import { relativeTime, displayValue, initials } from "@/lib/dashboard/format";
 import { StaggerList, StaggerItem, FadeIn } from "@/components/motion/stagger";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -17,6 +19,7 @@ export default async function ConversationDetailPage({
   const { id } = await params;
   const detail = await getConversationDetail(id);
   if (!detail) notFound();
+  const ticketOpen = await hasOpenTicket(id);
 
   return (
     <div>
@@ -38,7 +41,27 @@ export default async function ConversationDetailPage({
             <p className="tnum text-sm text-muted">{detail.waId.replace(/@.*/, "")}</p>
           </div>
         </div>
-        <StatusBadge status={detail.status} />
+        <div className="flex items-center gap-3">
+          {ticketOpen ? (
+            <Link
+              href="/tickets"
+              className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted hover:bg-surface-hover hover:text-foreground"
+            >
+              Handoff open
+            </Link>
+          ) : (
+            <form action={createTicketManual}>
+              <input type="hidden" name="conversationId" value={id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted hover:bg-surface-hover hover:text-foreground"
+              >
+                Escalate to person
+              </button>
+            </form>
+          )}
+          <StatusBadge status={detail.status} />
+        </div>
       </FadeIn>
 
       <div className="grid grid-cols-1 gap-6 px-8 py-6 lg:grid-cols-[1fr_360px]">

@@ -8,6 +8,10 @@ const GENAI_TYPE: Record<FieldType, Type> = {
   boolean: Type.BOOLEAN,
 };
 
+// Reserved key the extraction pass returns alongside the tenant's fields to flag a human-handoff
+// request. Exported so the agent loop reads the exact same key.
+export const HANDOFF_KEY = "_handoff_requested";
+
 // The free tier is frequently overloaded: the same model/key bounces between 503 (UNAVAILABLE),
 // 429 (rate limit), and transient 404 within seconds. A single failed call silently drops the
 // customer's WhatsApp reply, so retry transient errors with exponential backoff before giving up.
@@ -92,6 +96,18 @@ class GeminiProvider implements LLMProvider {
         description: f.hint ?? f.label,
       };
     }
+
+    // Reserved, underscore-prefixed so it can never collide with a tenant field key (those must
+    // start with a letter). Piggybacks human-handoff detection on the extraction call so it costs
+    // no extra request. Read by the agent loop; never merged into collected_data.
+    properties[HANDOFF_KEY] = {
+      type: Type.BOOLEAN,
+      nullable: true,
+      description:
+        "true only if the customer is explicitly asking to speak with a real person, a human " +
+        "agent, a manager, the management, or the business directly, or to be called by a person. " +
+        "Otherwise false.",
+    };
 
     const transcript = input.history
       .map((t) => `${t.role === "agent" ? "Assistant" : "Customer"}: ${t.text}`)

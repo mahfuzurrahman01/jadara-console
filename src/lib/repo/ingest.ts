@@ -476,6 +476,68 @@ export async function getTenantOwnerEmail(tenantId: string): Promise<string | nu
   return user.data?.email ?? null;
 }
 
+// The owner's user id for a tenant, used to assign handoff tickets. Null when none resolves.
+export async function getTenantOwnerUserId(tenantId: string): Promise<string | null> {
+  const db = supabaseAdmin();
+  const member = await db
+    .from("tenant_members")
+    .select("user_id")
+    .eq("tenant_id", tenantId)
+    .eq("role", "owner")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (member.error) throw member.error;
+  return member.data?.user_id ?? null;
+}
+
+// True when the conversation has an active (non-resolved) ticket, i.e. the agent is paused because
+// a human is handling it.
+export async function hasOpenTicket(conversationId: string): Promise<boolean> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("tickets")
+    .select("id")
+    .eq("conversation_id", conversationId)
+    .neq("status", "resolved")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+export interface NewTicket {
+  tenantId: string;
+  agentId: string;
+  conversationId: string;
+  reason: string;
+  source: "ai" | "manual";
+}
+
+// Open a ticket for a conversation unless one is already active. Returns whether a new row was
+// created, so the caller sends the holding message and notifies exactly once. The partial unique
+// index is the backstop against a race; a violation is treated as "already open".
+export async function createTicketIfNone(t: NewTicket): Promise<{ created: boolean }> {
+  const db = supabaseAdmin();
+  if (await hasOpenTicket(t.conversationId)) return { created: false };
+
+  const assigned = await getTenantOwnerUserId(t.tenantId);
+  const { error } = await db.from("tickets").insert({
+    tenant_id: t.tenantId,
+    agent_id: t.agentId,
+    conversation_id: t.conversationId,
+    assigned_user_id: assigned,
+    reason: t.reason,
+    source: t.source,
+  });
+  if (error) {
+    // Unique-violation backstop: another writer opened one first.
+    if (error.code === "23505") return { created: false };
+    throw error;
+  }
+  return { created: true };
+}
+
 export interface InboundMessage {
   type: string;
   content: string;
