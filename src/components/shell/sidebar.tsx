@@ -8,14 +8,24 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logout } from "@/lib/auth/actions";
 import { initials } from "@/lib/dashboard/format";
 
-const NAV = [
-  { href: "/", label: "Conversations" },
-  { href: "/leads", label: "Qualified leads" },
-  { href: "/tickets", label: "Tickets" },
-  { href: "/connect", label: "WhatsApp" },
-  { href: "/agent", label: "Agent setup" },
-  { href: "/rules", label: "Qualification rules" },
-  { href: "/integrations", label: "Integration" },
+const NAV_GROUPS = [
+  {
+    label: "Inbox",
+    items: [
+      { href: "/", label: "Conversations" },
+      { href: "/leads", label: "Qualified leads" },
+      { href: "/tickets", label: "Tickets" },
+    ],
+  },
+  {
+    label: "Setup",
+    items: [
+      { href: "/connect", label: "WhatsApp" },
+      { href: "/agent", label: "Agent setup" },
+      { href: "/rules", label: "Qualification rules" },
+      { href: "/integrations", label: "Integration" },
+    ],
+  },
 ];
 
 export function Sidebar({
@@ -33,37 +43,46 @@ export function Sidebar({
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border px-4 py-6 md:flex">
       <div className="px-2">
-        <div className="flex items-center gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Jadara</p>
+        <div className="mt-3 flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-xs font-semibold text-background">
             {mark}
           </span>
-          <span className="font-display text-lg font-semibold tracking-tight">
+          <span className="min-w-0 truncate font-display text-lg font-semibold tracking-tight">
             {tenantName || "Workspace"}
           </span>
         </div>
         <p className="mt-1 pl-9 text-xs text-muted">Intake console</p>
       </div>
 
-      <nav className="mt-8 flex flex-col gap-1">
-        {NAV.map((item) => {
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          return (
-            <Link key={item.href} href={item.href} className="relative">
-              <motion.span
-                whileHover={{ x: active ? 0 : 2 }}
-                transition={{ duration: 0.15 }}
-                className={cn(
-                  "flex items-center rounded-lg px-3 py-2 text-sm",
-                  active
-                    ? "bg-foreground text-background"
-                    : "text-muted hover:bg-surface-hover hover:text-foreground",
-                )}
-              >
-                {item.label}
-              </motion.span>
-            </Link>
-          );
-        })}
+      <nav className="mt-8 flex flex-col gap-6">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label} className="flex flex-col gap-1">
+            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted/70">
+              {group.label}
+            </p>
+            {group.items.map((item) => {
+              const active =
+                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              return (
+                <Link key={item.href} href={item.href} className="relative">
+                  <motion.span
+                    whileHover={{ x: active ? 0 : 2 }}
+                    transition={{ duration: 0.15 }}
+                    className={cn(
+                      "flex items-center rounded-lg px-3 py-2 text-sm",
+                      active
+                        ? "bg-foreground text-background"
+                        : "text-muted hover:bg-surface-hover hover:text-foreground",
+                    )}
+                  >
+                    {item.label}
+                  </motion.span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="mt-auto flex flex-col gap-4">

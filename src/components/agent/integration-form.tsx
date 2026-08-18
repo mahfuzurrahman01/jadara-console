@@ -10,9 +10,10 @@ import {
   type IntegrationState,
 } from "@/lib/agent/integrations-constants";
 import type { IntegrationConfig } from "@/lib/agent/integrations";
-
-const inputCls =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+import { Field } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function IntegrationForm({ config }: { config: IntegrationConfig }) {
   const [authType, setAuthType] = useState(config.authType);
@@ -33,59 +34,46 @@ export function IntegrationForm({ config }: { config: IntegrationConfig }) {
       <input type="hidden" name="args" value={JSON.stringify(args)} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Name</span>
-          <input className={inputCls} name="name" defaultValue={config.name} placeholder="create_beneficiary" required />
-          <span className="text-xs text-muted">Reference this exact name in your qualification rule.</span>
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Method</span>
-          <select className={inputCls} name="method" defaultValue={config.method}>
+        <Field label="Name" hint="Reference this exact name in your qualification rule.">
+          <Input name="name" defaultValue={config.name} placeholder="create_beneficiary" required />
+        </Field>
+        <Field label="Method">
+          <Select name="method" defaultValue={config.method}>
             {HTTP_METHODS.map((m) => (
               <option key={m} value={m}>
                 {m}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted">URL</span>
-        <input className={inputCls} name="url" defaultValue={config.url} placeholder="https://api.yourcrm.com/leads" required />
-        <span className="text-xs text-muted">
-          Requests to private or link-local addresses are refused. Use a public endpoint.
-        </span>
-      </label>
+      <Field
+        label="URL"
+        hint="Requests to private or link-local addresses are refused. Use a public endpoint."
+      >
+        <Input name="url" defaultValue={config.url} placeholder="https://api.yourcrm.com/leads" required />
+      </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Authentication</span>
-          <select
-            className={inputCls}
-            name="auth_type"
-            value={authType}
-            onChange={(e) => setAuthType(e.target.value)}
-          >
+        <Field label="Authentication">
+          <Select name="auth_type" value={authType} onChange={(e) => setAuthType(e.target.value)}>
             {AUTH_TYPES.map((a) => (
               <option key={a} value={a}>
                 {a === "none" ? "None" : "Bearer token"}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
         {authType === "bearer" && (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted">Bearer token</span>
-            <input
-              className={inputCls}
+          <Field label="Bearer token" hint="Stored encrypted at rest. Never shown again.">
+            <Input
               name="secret"
               type="password"
               autoComplete="off"
               placeholder={config.hasSecret ? "Stored. Leave blank to keep." : "Paste the token"}
             />
-            <span className="text-xs text-muted">Stored encrypted at rest. Never shown again.</span>
-          </label>
+          </Field>
         )}
       </div>
 
@@ -101,43 +89,36 @@ export function IntegrationForm({ config }: { config: IntegrationConfig }) {
             {args.map((a, i) => (
               <li
                 key={i}
-                className="grid grid-cols-1 gap-2 rounded-xl border border-border bg-surface/60 p-3 sm:grid-cols-[1fr_1fr_120px_auto_auto]"
+                className="grid grid-cols-1 items-center gap-2 rounded-xl border border-border bg-surface/60 p-3 sm:grid-cols-[1fr_1fr_120px_auto_auto]"
               >
-                <input
-                  className={inputCls}
+                <Input
                   value={a.arg}
                   onChange={(e) => setArg(i, { arg: e.target.value })}
                   placeholder="arg name"
                 />
-                <select className={inputCls} value={a.source} onChange={(e) => setArg(i, { source: e.target.value })}>
+                <Select value={a.source} onChange={(e) => setArg(i, { source: e.target.value })}>
                   {config.sourceOptions.map((s) => (
                     <option key={s.value} value={s.value}>
                       {s.label}
                     </option>
                   ))}
-                </select>
-                <select className={inputCls} value={a.type} onChange={(e) => setArg(i, { type: e.target.value })}>
+                </Select>
+                <Select value={a.type} onChange={(e) => setArg(i, { type: e.target.value })}>
                   {ARG_TYPES.map((t) => (
                     <option key={t} value={t}>
                       {t}
                     </option>
                   ))}
-                </select>
-                <label className="flex items-center gap-2 px-1 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={a.required}
-                    onChange={(e) => setArg(i, { required: e.target.checked })}
-                  />
-                  Req
-                </label>
-                <button
-                  type="button"
-                  onClick={() => removeArg(i)}
-                  className="rounded-lg border border-border px-3 py-2 text-sm text-muted hover:bg-surface-hover hover:text-foreground"
-                >
+                </Select>
+                <Checkbox
+                  label="Req"
+                  className="px-1"
+                  checked={a.required}
+                  onChange={(e) => setArg(i, { required: e.target.checked })}
+                />
+                <Button type="button" variant="outline" onClick={() => removeArg(i)}>
                   Remove
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -151,19 +132,14 @@ export function IntegrationForm({ config }: { config: IntegrationConfig }) {
         </button>
       </div>
 
-      <label className="flex items-center gap-2 border-t border-border pt-5 text-sm">
-        <input type="checkbox" name="enabled" defaultChecked={config.enabled} />
-        Integration enabled
-      </label>
+      <div className="border-t border-border pt-5">
+        <Checkbox name="enabled" label="Integration enabled" defaultChecked={config.enabled} />
+      </div>
 
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <Button type="submit" disabled={pending}>
           {pending ? "Saving..." : "Save integration"}
-        </button>
+        </Button>
         {state.ok && <span className="text-sm text-muted">Saved.</span>}
         {state.error && <span className="text-sm text-foreground">{state.error}</span>}
       </div>

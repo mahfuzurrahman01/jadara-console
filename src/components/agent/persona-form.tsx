@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import { updateAgentPersona } from "@/lib/agent/config-actions";
 import { MODELS, type ConfigState } from "@/lib/agent/config-constants";
 import type { AgentConfig } from "@/lib/agent/config";
-
-const inputCls =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+import { Field } from "@/components/ui/field";
+import { Input, Textarea, Select } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function PersonaForm({ agent }: { agent: AgentConfig }) {
   const [state, action, pending] = useActionState<ConfigState, FormData>(updateAgentPersona, {});
@@ -14,53 +14,44 @@ export function PersonaForm({ agent }: { agent: AgentConfig }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Agent name</span>
-          <input className={inputCls} name="name" defaultValue={agent.name} required />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Vertical</span>
-          <input
-            className={inputCls}
+        <Field label="Agent name">
+          <Input name="name" defaultValue={agent.name} required />
+        </Field>
+        <Field label="Vertical">
+          <Input
             name="vertical"
             defaultValue={agent.vertical}
             placeholder="e.g. Real estate, Lending, Charity"
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted">Persona / system prompt</span>
-        <textarea
-          className={`${inputCls} min-h-40 resize-y leading-relaxed`}
+      <Field
+        label="Persona / system prompt"
+        hint="Do not put secrets or private customer data here. This text is sent to the model on every turn."
+      >
+        <Textarea
+          className="min-h-40"
           name="system_prompt"
           defaultValue={agent.systemPrompt}
           placeholder="Describe how the agent should speak and what it is trying to find out. This is the instruction the AI follows on every reply."
         />
-        <span className="text-xs text-muted">
-          Do not put secrets or private customer data here. This text is sent to the model on every turn.
-        </span>
-      </label>
+      </Field>
 
-      <label className="flex max-w-xs flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted">Model</span>
-        <select className={inputCls} name="model" defaultValue={agent.model}>
+      <Field label="Model" className="max-w-xs">
+        <Select name="model" defaultValue={agent.model}>
           {MODELS.map((m) => (
             <option key={m} value={m}>
               {m}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <Button type="submit" disabled={pending}>
           {pending ? "Saving..." : "Save changes"}
-        </button>
+        </Button>
         {state.ok && <span className="text-sm text-muted">Saved.</span>}
         {state.error && <span className="text-sm text-foreground">{state.error}</span>}
       </div>

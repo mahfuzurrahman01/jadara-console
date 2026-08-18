@@ -4,9 +4,11 @@ import { useActionState } from "react";
 import { addField, updateField, deleteField } from "@/lib/agent/config-actions";
 import type { ConfigState } from "@/lib/agent/config-constants";
 import type { FieldRow } from "@/lib/agent/config";
+import { Field } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const inputCls =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const TYPES = ["string", "number", "boolean"];
 
 export function FieldsManager({ fields }: { fields: FieldRow[] }) {
@@ -36,58 +38,44 @@ function FieldEditor({ field }: { field: FieldRow }) {
       <form action={action} className="flex flex-col gap-3">
         <input type="hidden" name="id" value={field.id} />
         <div className="flex items-center justify-between gap-3">
-          <code className="rounded bg-surface px-2 py-0.5 text-xs">{field.key}</code>
+          <code className="rounded bg-surface px-2 py-0.5 font-mono text-xs">{field.key}</code>
           <span className="text-xs text-muted">Key cannot be changed</span>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px]">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted">Label</span>
-            <input className={inputCls} name="label" defaultValue={field.label} required />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted">Type</span>
-            <select className={inputCls} name="type" defaultValue={field.type}>
+          <Field label="Label">
+            <Input name="label" defaultValue={field.label} required />
+          </Field>
+          <Field label="Type">
+            <Select name="type" defaultValue={field.type}>
               {TYPES.map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
         </div>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Question hint</span>
-          <input
-            className={inputCls}
+        <Field label="Question hint">
+          <Input
             name="question_hint"
             defaultValue={field.questionHint}
             placeholder="How the agent should ask for this"
           />
-        </label>
+        </Field>
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="required" defaultChecked={field.required} />
-            Required
-          </label>
+          <Checkbox name="required" label="Required" defaultChecked={field.required} />
           <div className="ml-auto flex items-center gap-2">
             {state.ok && <span className="text-xs text-muted">Saved.</span>}
             {state.error && <span className="text-xs text-foreground">{state.error}</span>}
-            <button
-              type="submit"
-              disabled={pending}
-              className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-hover disabled:opacity-60"
-            >
+            <Button type="submit" variant="outline" size="sm" disabled={pending}>
               {pending ? "Saving..." : "Save"}
-            </button>
+            </Button>
           </div>
         </div>
       </form>
       <form action={deleteField} className="mt-2 flex justify-end">
         <input type="hidden" name="id" value={field.id} />
-        <button
-          type="submit"
-          className="text-xs text-muted hover:text-foreground hover:underline"
-        >
+        <button type="submit" className="text-xs text-muted hover:text-foreground hover:underline">
           Delete field
         </button>
       </form>
@@ -105,49 +93,34 @@ function AddField() {
     >
       <p className="text-sm font-medium">Add a field</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Key</span>
-          <input className={inputCls} name="key" placeholder="monthly_income" required />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Label</span>
-          <input className={inputCls} name="label" placeholder="Monthly income" required />
-        </label>
+        <Field label="Key">
+          <Input name="key" placeholder="monthly_income" required />
+        </Field>
+        <Field label="Label">
+          <Input name="label" placeholder="Monthly income" required />
+        </Field>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[140px_1fr]">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Type</span>
-          <select className={inputCls} name="type" defaultValue="string">
+        <Field label="Type">
+          <Select name="type" defaultValue="string">
             {TYPES.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted">Question hint</span>
-          <input
-            className={inputCls}
-            name="question_hint"
-            placeholder="How the agent should ask for this"
-          />
-        </label>
+          </Select>
+        </Field>
+        <Field label="Question hint">
+          <Input name="question_hint" placeholder="How the agent should ask for this" />
+        </Field>
       </div>
       <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="required" defaultChecked />
-          Required
-        </label>
+        <Checkbox name="required" label="Required" defaultChecked />
         <div className="ml-auto flex items-center gap-2">
           {state.error && <span className="text-xs text-foreground">{state.error}</span>}
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
+          <Button type="submit" disabled={pending}>
             {pending ? "Adding..." : "Add field"}
-          </button>
+          </Button>
         </div>
       </div>
     </form>

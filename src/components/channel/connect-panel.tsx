@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
 
 interface Status {
   status: string;
@@ -69,13 +70,9 @@ export function ConnectPanel() {
           <StatusBadge status={badgeStatus} />
         </div>
         {status !== "connected" && (
-          <button
-            onClick={connect}
-            disabled={busy}
-            className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
+          <Button onClick={connect} disabled={busy}>
             {busy ? "Starting..." : status === "linking" ? "Restart linking" : "Connect WhatsApp"}
-          </button>
+          </Button>
         )}
       </div>
 
