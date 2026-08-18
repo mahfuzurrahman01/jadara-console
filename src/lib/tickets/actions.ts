@@ -8,25 +8,29 @@ import { TICKET_STATUSES, type TicketStatus } from "@/lib/tickets/constants";
 
 // Change a ticket's status. Scoped to the signed-in tenant so one tenant can never touch another's
 // tickets. Resolving a ticket un-pauses the agent on that conversation (the pause is derived from
-// the presence of a non-resolved ticket).
-export async function updateTicketStatus(formData: FormData): Promise<void> {
+// the presence of a non-resolved ticket). Called directly from the kanban board with the target
+// column's status; returns ok so the client can revert an optimistic move on failure.
+export async function setTicketStatus(
+  ticketId: string,
+  status: TicketStatus,
+): Promise<{ ok: boolean }> {
   const tenant = await requireTenant();
-  const id = String(formData.get("ticketId") ?? "");
-  const status = String(formData.get("status") ?? "") as TicketStatus;
-  if (!id || !TICKET_STATUSES.includes(status)) return;
+  if (!ticketId || !TICKET_STATUSES.includes(status)) return { ok: false };
 
   const db = supabaseAdmin();
-  await db
+  const { error } = await db
     .from("tickets")
     .update({
       status,
       updated_at: new Date().toISOString(),
       resolved_at: status === "resolved" ? new Date().toISOString() : null,
     })
-    .eq("id", id)
+    .eq("id", ticketId)
     .eq("tenant_id", tenant.tenantId);
+  if (error) return { ok: false };
 
   revalidatePath("/tickets");
+  return { ok: true };
 }
 
 // Owner-initiated escalation from a conversation. Verifies the conversation belongs to the tenant,
