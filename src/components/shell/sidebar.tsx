@@ -12,7 +12,7 @@ export const NAV_GROUPS = [
   {
     label: "Inbox",
     items: [
-      { href: "/", label: "Conversations" },
+      { href: "/dashboard", label: "Conversations" },
       { href: "/leads", label: "Qualified leads" },
       { href: "/tickets", label: "Tickets" },
     ],
@@ -59,7 +59,10 @@ export function NavGroups({ onNavigate }: { onNavigate?: () => void }) {
             {group.label}
           </p>
           {group.items.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const active =
+              item.href === "/dashboard"
+                ? pathname === "/dashboard" || pathname.startsWith("/conversations")
+                : pathname.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href} onClick={onNavigate} className="relative">
                 <motion.span

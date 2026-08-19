@@ -26,7 +26,7 @@ export default async function ConversationDetailPage({
       <FadeIn className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-5 sm:px-8 sm:py-7">
         <div className="flex items-center gap-4">
           <Link
-            href="/"
+            href="/dashboard"
             className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted hover:bg-surface-hover hover:text-foreground"
           >
             Back
