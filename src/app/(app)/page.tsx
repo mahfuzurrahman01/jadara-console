@@ -1,37 +1,41 @@
 import Link from "next/link";
-import { listConversations } from "@/lib/dashboard/queries";
+import { listConversations, getDashboardStats } from "@/lib/dashboard/queries";
 import { requireTenant } from "@/lib/auth/dal";
 import { relativeTime, initials } from "@/lib/dashboard/format";
 import { PageHeader } from "@/components/shell/page-header";
-import { StaggerList, StaggerItem, HoverCard } from "@/components/motion/stagger";
+import { StaggerList, StaggerItem, HoverCard, FadeIn } from "@/components/motion/stagger";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConversationsPage() {
-  const [conversations, tenant] = await Promise.all([listConversations(), requireTenant()]);
-  const open = conversations.length;
-  const qualified = conversations.filter((c) => c.status === "qualified").length;
+  const [conversations, tenant, stats] = await Promise.all([
+    listConversations(),
+    requireTenant(),
+    getDashboardStats(),
+  ]);
 
   return (
     <div>
       <PageHeader
         title="Conversations"
         subtitle={`Live WhatsApp intake for ${tenant.tenantName}`}
-        right={
-          <div className="flex gap-2">
-            <Badge variant="muted" className="tnum">
-              {open} total
-            </Badge>
-            <Badge variant="solid" className="tnum">
-              {qualified} qualified
-            </Badge>
-          </div>
-        }
       />
 
-      <div className="px-4 py-6 sm:px-8">
+      <div className="flex flex-col gap-6 px-4 py-6 sm:px-8">
+        <FadeIn className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label="Conversations" value={stats.conversations} />
+          <StatCard label="Qualified" value={stats.qualified} emphasis />
+          <StatCard label="Leads sent" value={stats.leads} href="/leads" />
+          <StatCard
+            label="Open tickets"
+            value={stats.openTickets}
+            href="/tickets"
+            emphasis={stats.openTickets > 0}
+          />
+        </FadeIn>
+
         {conversations.length === 0 ? (
           <EmptyState />
         ) : (
@@ -43,7 +47,13 @@ export default async function ConversationsPage() {
                     href={`/conversations/${c.id}`}
                     className="flex items-center gap-4 rounded-xl border border-border bg-surface/60 px-5 py-4 transition-colors hover:bg-surface-hover"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-sm font-medium">
+                    <span
+                      className={
+                        c.status === "qualified"
+                          ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-medium text-background"
+                          : "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-sm font-medium"
+                      }
+                    >
                       {initials(c.contactName, c.waId)}
                     </span>
                     <div className="min-w-0 flex-1">

@@ -66,6 +66,43 @@ export async function listConversations(): Promise<ConversationRow[]> {
   });
 }
 
+export interface DashboardStats {
+  conversations: number;
+  qualified: number;
+  leads: number;
+  openTickets: number;
+}
+
+// Top-of-dashboard KPIs. Uses head-only count queries (no rows fetched), all tenant-scoped.
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const db = supabaseAdmin();
+  const tid = await tenantId();
+  if (!tid) return { conversations: 0, qualified: 0, leads: 0, openTickets: 0 };
+
+  const head = { count: "exact" as const, head: true };
+  const [conversations, qualified, leads, openTickets] = await Promise.all([
+    db.from("conversations").select("id", head).eq("tenant_id", tid),
+    db
+      .from("conversation_state")
+      .select("conversation_id", head)
+      .eq("tenant_id", tid)
+      .eq("qualification_status", "qualified"),
+    db
+      .from("conversation_state")
+      .select("conversation_id", head)
+      .eq("tenant_id", tid)
+      .eq("qualified_flag", true),
+    db.from("tickets").select("id", head).eq("tenant_id", tid).neq("status", "resolved"),
+  ]);
+
+  return {
+    conversations: conversations.count ?? 0,
+    qualified: qualified.count ?? 0,
+    leads: leads.count ?? 0,
+    openTickets: openTickets.count ?? 0,
+  };
+}
+
 export interface FieldRow {
   key: string;
   label: string;
