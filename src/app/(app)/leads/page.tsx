@@ -22,7 +22,7 @@ export default async function LeadsPage() {
         }
       />
 
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-8">
         {leads.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-24 text-center">
             <p className="font-display text-lg font-medium">No qualified leads yet</p>

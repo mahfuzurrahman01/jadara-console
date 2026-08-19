@@ -23,7 +23,7 @@ export default async function ConversationDetailPage({
 
   return (
     <div>
-      <FadeIn className="flex items-center justify-between gap-4 border-b border-border px-8 py-7">
+      <FadeIn className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-5 sm:px-8 sm:py-7">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -64,7 +64,7 @@ export default async function ConversationDetailPage({
         </div>
       </FadeIn>
 
-      <div className="grid grid-cols-1 gap-6 px-8 py-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 gap-6 px-4 py-6 sm:px-8 lg:grid-cols-[1fr_360px]">
         {/* Transcript */}
         <Card className="flex flex-col">
           <CardHeader className="flex items-center justify-between">

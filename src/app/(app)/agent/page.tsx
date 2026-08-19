@@ -12,7 +12,7 @@ export default async function AgentSetupPage() {
     return (
       <div>
         <PageHeader title="Agent setup" subtitle="Configure how your WhatsApp agent behaves" />
-        <div className="px-8 py-6">
+        <div className="px-4 py-6 sm:px-8">
           <p className="text-sm text-muted">No agent found for this workspace.</p>
         </div>
       </div>

@@ -31,7 +31,7 @@ export default async function ConversationsPage() {
         }
       />
 
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-8">
         {conversations.length === 0 ? (
           <EmptyState />
         ) : (

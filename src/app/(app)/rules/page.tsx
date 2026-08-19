@@ -16,7 +16,7 @@ export default async function RulesPage() {
         subtitle="Decide when a conversation counts as a qualified lead"
       />
 
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-8">
         {!config || config.fieldOptions.length === 0 ? (
           <Card>
             <CardBody>

@@ -11,7 +11,7 @@ export default function ConnectPage() {
         title="WhatsApp"
         subtitle="Link the number your customers will message. Use a dedicated number, not a personal one."
       />
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-8">
         <Card>
           <CardHeader>
             <CardTitle>Connection</CardTitle>

@@ -16,7 +16,7 @@ export default async function IntegrationsPage() {
         subtitle="Where a qualified lead is sent. Called once, automatically, when a customer qualifies."
       />
 
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-8">
         {!config ? (
           <Card>
             <CardBody>

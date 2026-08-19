@@ -10,12 +10,12 @@ export function PageHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <FadeIn className="flex items-end justify-between gap-4 border-b border-border px-8 py-7">
+    <FadeIn className="flex flex-col gap-3 border-b border-border px-4 py-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:px-8 sm:py-7">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
-      {right}
+      {right && <div className="shrink-0">{right}</div>}
     </FadeIn>
   );
 }
